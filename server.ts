@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
-const HOST = process.env.RAILWAY_STATIC_URL ? '0.0.0.0' : 'localhost';
+const HOST = process.env.PORT ? '0.0.0.0' : 'localhost';
 
 // WebSocket setup
 const wss = new WebSocketServer({ noServer: true });
