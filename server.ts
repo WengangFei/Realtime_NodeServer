@@ -86,6 +86,10 @@ async function connectNotifyClient() {
   }
 }
 
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT from env:', process.env.PORT);
+console.log('Final PORT:', PORT);
+
 // Optional: Use a pool for regular queries (like inserting comments)
 // const pool = new Pool({
 //   connectionString: process.env.DATABASE_URL_DIRECT,
