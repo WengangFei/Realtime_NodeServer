@@ -12,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.RAILWAY_STATIC_URL ? '0.0.0.0' : 'localhost';
 
 // WebSocket setup
 const wss = new WebSocketServer({ noServer: true });
@@ -97,9 +98,8 @@ async function connectNotifyClient() {
 // ------------------------
 async function startServer() {
   await connectNotifyClient();
-
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+  const server = app.listen(PORT as number, HOST, () => {
+    console.log(`🚀 Server running on ${HOST} port ${PORT}`);
   });
 
   server.on('upgrade', (request, socket, head) => {
