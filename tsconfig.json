@@ -2,7 +2,7 @@
   "compilerOptions": {
     // File Layout
     "rootDir": "./",
-    "outDir": "./",
+    "outDir": "./dist",
 
     // Environment Settings
     "module": "NodeNext",
