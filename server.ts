@@ -99,8 +99,8 @@ async function connectNotifyClient() {
 // ------------------------
 async function startServer() {
   await connectNotifyClient();
-  const server = app.listen(PORT as number, HOST, () => {
-    console.log(`🚀 Server running on ${HOST} port ${PORT}`);
+  const server = app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
   });
 
   server.on('upgrade', (request, socket, head) => {
