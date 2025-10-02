@@ -11,8 +11,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3001;
-const HOST = process.env.PORT ? '0.0.0.0' : 'localhost';
+const PORT = Number(process.env.PORT) || 3001;
+const HOST = "0.0.0.0"; // always use 0.0.0.0 in containers
+
 
 // WebSocket setup
 const wss = new WebSocketServer({ noServer: true });
