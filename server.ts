@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = Number(process.env.PORT) || 3001;
-const HOST = "0.0.0.0"; // always use 0.0.0.0 in containers
+// const HOST = "0.0.0.0"; // always use 0.0.0.0 in containers
 
 
 // WebSocket setup
@@ -42,12 +42,27 @@ wss.on("connection", (ws: WebSocket, req) => {
 // Database setup
 // ------------------------
 
+// 1️⃣ Pool for regular queries (INSERT/SELECT/etc.)
+// export const pool = new Pool({
+//   connectionString: process.env.DATABASE_URL, // <-- use Neon pooler here (port 5433)
+//   max: 5, // keep small; pooler multiplexes behind the scenes
+// });
+// pool.on("error", (err) => {
+//   console.error("Unexpected PG pool error:", err);
+// });
+
+// // Helper function for queries
+// export async function runQuery(sql: string, params?: any[]) {
+//   return pool.query(sql, params);
+// }
+
+
 // Dedicated client for LISTEN/NOTIFY
 let pg: Client;
 
 async function connectNotifyClient() {
   pg = new Client({
-    connectionString: process.env.DATABASE_URL_DIRECT,
+    connectionString: process.env.DATABASE_URL,
   });
 
   pg.on("notification", (msg) => {
@@ -86,14 +101,6 @@ async function connectNotifyClient() {
   }
 }
 
-// Optional: Use a pool for regular queries (like inserting comments)
-// const pool = new Pool({
-//   connectionString: process.env.DATABASE_URL_DIRECT,
-// });
-// pool.on("error", (err) => {
-//   console.error("Unexpected PG pool error:", err);
-// });
-
 // ------------------------
 // Start server
 // ------------------------
@@ -104,10 +111,16 @@ async function startServer() {
   });
 
   server.on('upgrade', (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-      wss.emit('connection', ws, request);
-      //Triggers WebSocket server’s "connection" event
-    });
+    // Only accept WS connections on /ws
+    if (request.url === '/ws') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    } else {
+      // Close any other upgrade attempts
+      socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+      socket.destroy();
+    }
   });
 }
 
