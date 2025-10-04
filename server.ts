@@ -63,6 +63,7 @@ let pg: Client;
 async function connectNotifyClient() {
   pg = new Client({
     connectionString: process.env.DATABASE_URL_DIRECT,
+    ssl: { rejectUnauthorized: false },
   });
 
   pg.on("notification", (msg) => {
