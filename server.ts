@@ -111,18 +111,20 @@ async function startServer() {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 
-  server.on('upgrade', (request, socket, head) => {
-    // Only accept WS connections on /ws
-    if (request.url === '/ws') {
+  server.on("upgrade", (request, socket, head) => {
+    const origin = request.headers.origin;
+    console.log("🔌 WS upgrade attempt from origin:", origin);
+
+    if (request.url === "/ws") {
       wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
+        wss.emit("connection", ws, request);
       });
     } else {
-      // Close any other upgrade attempts
-      socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+      socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
       socket.destroy();
     }
   });
+
 }
 
 // ------------------------
