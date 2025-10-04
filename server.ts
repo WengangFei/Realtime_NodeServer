@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = Number(process.env.PORT) || 3001;
-// const HOST = "0.0.0.0"; // always use 0.0.0.0 in containers
+const HOST = "0.0.0.0"; // always use 0.0.0.0 in containers
 
 
 // WebSocket setup
@@ -62,7 +62,7 @@ let pg: Client;
 
 async function connectNotifyClient() {
   pg = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_URL_DIRECT,
   });
 
   pg.on("notification", (msg) => {
@@ -106,7 +106,7 @@ async function connectNotifyClient() {
 // ------------------------
 async function startServer() {
   await connectNotifyClient();
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, HOST, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
 
