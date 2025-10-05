@@ -120,7 +120,7 @@ function scheduleReconnect() {
   }, 5000); // 5s delay
 }
 
-// Keep connection alive (Neon idle timeout workaround)
+// Keep connection alive (Neon idle timeout 5-10 mins will kill the connection, workaround is to send a ping every 1 min)
 keepAliveInterval = setInterval(async () => {
   if (pgClient) {
     try {
