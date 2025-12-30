@@ -14,6 +14,22 @@ app.use(express.json());
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = "0.0.0.0";
 
+function broadcast(type: string, data: any) {
+  clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(
+        JSON.stringify({
+          type,
+          data,
+        })
+      );
+    }
+  });
+
+  console.log(`✅ ${type} broadcasted to ${clients.size} clients`);
+}
+
+
 // ------------------------
 // WebSocket setup
 // ------------------------
@@ -75,6 +91,20 @@ async function connectNotifyClient() {
     // Listen to the trigger function created for comments table that listens for new comments
     await pgClient.query("LISTEN comments_channel");
     console.log("👂 Listening on comments_channel");
+    // Listen to the trigger function created for messages table that listens for new messages
+    await pgClient.query("LISTEN messages_channel");
+    console.log("👂 Listening on messages_channel");
+    // Keep connection alive (Neon idle timeout 5-10 mins will kill the connection, workaround is to send a ping every 1 min)
+    keepAliveInterval = setInterval(async () => {
+      if (pgClient) {
+        try {
+          await pgClient.query("SELECT 1;");
+        } catch (err) {
+          console.error("⚠️ Keepalive failed:", (err as Error).message);
+          scheduleReconnect();
+        }
+      }
+    }, 60_000); // run every 1 minute
     reconnectTimer = null;
   } catch (err) {
     console.error("❌ Failed to connect notification client:", (err as Error).message);
@@ -82,19 +112,33 @@ async function connectNotifyClient() {
   }
 
   pgClient.on("notification", (msg) => {// a new action made and sent a notification from data base
-    console.log("📨 New comment notification received");
+    console.log(`📨 New ${msg.channel.split('_')[0]} notification received`);
 
     try {
       const payload = JSON.parse(msg.payload as string);
-      clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: "NEW_COMMENT",
-            data: payload
-          }));
-        }
-      });
-      console.log(`✅ Broadcasted to ${clients.size} clients`);
+      // Switch to different channel based on message type
+      switch (msg.channel) {
+        case "comments_channel":
+          broadcast("NEW_COMMENT", payload);
+          break;
+
+        case "messages_channel":
+          broadcast("NEW_MESSAGE", payload);
+          break;
+
+        default:
+          console.warn("⚠️ Unknown channel:", msg.channel);
+      }
+
+      // clients.forEach((client) => {
+      //   if (client.readyState === WebSocket.OPEN) {
+      //     client.send(JSON.stringify({
+      //       type: "NEW_COMMENT",
+      //       data: payload
+      //     }));
+      //   }
+      // });
+      // console.log(`✅ Broadcasted to ${clients.size} clients`);
     } catch (error) {
       console.error("⚠️ Error processing notification:", error);
     }
